@@ -24,6 +24,8 @@ def save_audio_from_dict(audio_dict, output_path):
         if not isinstance(audio_dict["array"], torch.Tensor)
         else audio_dict["array"]
     )
+    if array.ndim == 1:
+        array = array.unsqueeze(0)
     sampling_rate = audio_dict["sampling_rate"]
     torchaudio.save(output_path, array, sampling_rate)
 
