@@ -30,29 +30,74 @@ def parse_args():
         choices=["F5TTS_v1_Base", "F5TTS_Base", "E2TTS_Base"],
         help="Experiment name",
     )
-    parser.add_argument("--dataset_name", type=str, default="Emilia_ZH_EN", help="Name of the dataset to use")
-    parser.add_argument("--learning_rate", type=float, default=1e-5, help="Learning rate for training")
-    parser.add_argument("--batch_size_per_gpu", type=int, default=3200, help="Batch size per GPU")
     parser.add_argument(
-        "--batch_size_type", type=str, default="frame", choices=["frame", "sample"], help="Batch size type"
+        "--dataset_path",
+        type=str,
+        default=None,
+        help="Path to preprocessed dataset (uses CustomDatasetPath mode if provided)",
     )
-    parser.add_argument("--max_samples", type=int, default=64, help="Max sequences per batch")
-    parser.add_argument("--grad_accumulation_steps", type=int, default=1, help="Gradient accumulation steps")
-    parser.add_argument("--max_grad_norm", type=float, default=1.0, help="Max gradient norm for clipping")
-    parser.add_argument("--epochs", type=int, default=100, help="Number of training epochs")
-    parser.add_argument("--num_warmup_updates", type=int, default=20000, help="Warmup updates")
-    parser.add_argument("--save_per_updates", type=int, default=50000, help="Save checkpoint every N updates")
+    parser.add_argument(
+        "--learning_rate", type=float, default=1e-5, help="Learning rate for training"
+    )
+    parser.add_argument(
+        "--batch_size_per_gpu", type=int, default=3200, help="Batch size per GPU"
+    )
+    parser.add_argument(
+        "--batch_size_type",
+        type=str,
+        default="frame",
+        choices=["frame", "sample"],
+        help="Batch size type",
+    )
+    parser.add_argument(
+        "--max_samples", type=int, default=64, help="Max sequences per batch"
+    )
+    parser.add_argument(
+        "--grad_accumulation_steps",
+        type=int,
+        default=1,
+        help="Gradient accumulation steps",
+    )
+    parser.add_argument(
+        "--max_grad_norm",
+        type=float,
+        default=1.0,
+        help="Max gradient norm for clipping",
+    )
+    parser.add_argument(
+        "--epochs", type=int, default=100, help="Number of training epochs"
+    )
+    parser.add_argument(
+        "--num_warmup_updates", type=int, default=20000, help="Warmup updates"
+    )
+    parser.add_argument(
+        "--save_per_updates",
+        type=int,
+        default=50000,
+        help="Save checkpoint every N updates",
+    )
     parser.add_argument(
         "--keep_last_n_checkpoints",
         type=int,
         default=-1,
         help="-1 to keep all, 0 to not save intermediate, > 0 to keep last N checkpoints",
     )
-    parser.add_argument("--last_per_updates", type=int, default=5000, help="Save last checkpoint every N updates")
-    parser.add_argument("--finetune", action="store_true", help="Use Finetune")
-    parser.add_argument("--pretrain", type=str, default=None, help="the path to the checkpoint")
     parser.add_argument(
-        "--tokenizer", type=str, default="pinyin", choices=["pinyin", "char", "custom"], help="Tokenizer type"
+        "--last_per_updates",
+        type=int,
+        default=5000,
+        help="Save last checkpoint every N updates",
+    )
+    parser.add_argument("--finetune", action="store_true", help="Use Finetune")
+    parser.add_argument(
+        "--pretrain", type=str, default=None, help="the path to the checkpoint"
+    )
+    parser.add_argument(
+        "--tokenizer",
+        type=str,
+        default="pinyin",
+        choices=["pinyin", "char", "custom"],
+        help="Tokenizer type",
     )
     parser.add_argument(
         "--tokenizer_path",
@@ -65,7 +110,13 @@ def parse_args():
         action="store_true",
         help="Log inferenced samples per ckpt save updates",
     )
-    parser.add_argument("--logger", type=str, default=None, choices=[None, "wandb", "tensorboard"], help="logger")
+    parser.add_argument(
+        "--logger",
+        type=str,
+        default=None,
+        choices=[None, "wandb", "tensorboard"],
+        help="logger",
+    )
     parser.add_argument(
         "--bnb_optimizer",
         action="store_true",
@@ -98,7 +149,11 @@ def main():
         )
         if args.finetune:
             if args.pretrain is None:
-                ckpt_path = str(cached_path("hf://SWivid/F5-TTS/F5TTS_v1_Base/model_1250000.safetensors"))
+                ckpt_path = str(
+                    cached_path(
+                        "hf://SWivid/F5-TTS/F5TTS_v1_Base/model_1250000.safetensors"
+                    )
+                )
             else:
                 ckpt_path = args.pretrain
 
@@ -117,7 +172,9 @@ def main():
         )
         if args.finetune:
             if args.pretrain is None:
-                ckpt_path = str(cached_path("hf://SWivid/F5-TTS/F5TTS_Base/model_1200000.pt"))
+                ckpt_path = str(
+                    cached_path("hf://SWivid/F5-TTS/F5TTS_Base/model_1200000.pt")
+                )
             else:
                 ckpt_path = args.pretrain
 
@@ -134,7 +191,9 @@ def main():
         )
         if args.finetune:
             if args.pretrain is None:
-                ckpt_path = str(cached_path("hf://SWivid/E2-TTS/E2TTS_Base/model_1200000.pt"))
+                ckpt_path = str(
+                    cached_path("hf://SWivid/E2-TTS/E2TTS_Base/model_1200000.pt")
+                )
             else:
                 ckpt_path = args.pretrain
 
@@ -143,7 +202,9 @@ def main():
             os.makedirs(checkpoint_path, exist_ok=True)
 
         file_checkpoint = os.path.basename(ckpt_path)
-        if not file_checkpoint.startswith("pretrained_"):  # Change: Add 'pretrained_' prefix to copied model
+        if not file_checkpoint.startswith(
+            "pretrained_"
+        ):  # Change: Add 'pretrained_' prefix to copied model
             file_checkpoint = "pretrained_" + file_checkpoint
         file_checkpoint = os.path.join(checkpoint_path, file_checkpoint)
         if not os.path.isfile(file_checkpoint):
@@ -155,8 +216,14 @@ def main():
     tokenizer = args.tokenizer
     if tokenizer == "custom":
         if not args.tokenizer_path:
-            raise ValueError("Custom tokenizer selected, but no tokenizer_path provided.")
+            raise ValueError(
+                "Custom tokenizer selected, but no tokenizer_path provided."
+            )
         tokenizer_path = args.tokenizer_path
+    elif args.dataset_path is not None:
+        # For custom dataset paths, use the vocab from the dataset directory
+        tokenizer_path = os.path.join(args.dataset_path, "vocab.txt")
+        print(f"Using vocab from dataset path: {tokenizer_path}")
     else:
         tokenizer_path = args.dataset_name
 
@@ -175,7 +242,9 @@ def main():
     )
 
     model = CFM(
-        transformer=model_cls(**model_cfg, text_num_embeds=vocab_size, mel_dim=n_mel_channels),
+        transformer=model_cls(
+            **model_cfg, text_num_embeds=vocab_size, mel_dim=n_mel_channels
+        ),
         mel_spec_kwargs=mel_spec_kwargs,
         vocab_char_map=vocab_char_map,
     )
@@ -202,7 +271,20 @@ def main():
         bnb_optimizer=args.bnb_optimizer,
     )
 
-    train_dataset = load_dataset(args.dataset_name, tokenizer, mel_spec_kwargs=mel_spec_kwargs)
+    if args.dataset_path is not None:
+        # Use CustomDatasetPath mode for custom dataset paths
+        # Use custom tokenizer to load vocab from dataset directory
+        train_dataset = load_dataset(
+            args.dataset_path,
+            "custom",
+            dataset_type="CustomDatasetPath",
+            mel_spec_kwargs=mel_spec_kwargs,
+        )
+    else:
+        # Use default CustomDataset mode
+        train_dataset = load_dataset(
+            args.dataset_name, tokenizer, mel_spec_kwargs=mel_spec_kwargs
+        )
 
     trainer.train(
         train_dataset,
