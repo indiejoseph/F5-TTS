@@ -31,15 +31,24 @@ def save_audio_from_dict(audio_dict, output_path):
 
 
 def prepare_hf_dataset(
-    dataset_name, split, text_column, phone_column, audio_column, lang="zh"
+    dataset_name,
+    split,
+    text_column,
+    phone_column,
+    audio_column,
+    lang="zh",
+    out_dir=None,
 ):
     """Load and prepare dataset from HuggingFace."""
     print(f"Loading dataset {dataset_name} with split {split}...")
     dataset = load_dataset(dataset_name, split=split)
 
-    # Create temporary directory for audio files
-    temp_audio_dir = Path(f"temp_wavs_{dataset_name.replace('/', '_')}_{split}")
-    temp_audio_dir.mkdir(exist_ok=True)
+    # Create wavs directory in output folder
+    if out_dir:
+        wavs_dir = Path(out_dir) / "wavs"
+    else:
+        wavs_dir = Path(f"temp_wavs_{dataset_name.replace('/', '_')}_{split}")
+    wavs_dir.mkdir(exist_ok=True, parents=True)
 
     processed_data = []
     durations = []
@@ -55,7 +64,7 @@ def prepare_hf_dataset(
 
         # Save audio to file
         audio_filename = f"{idx:06d}.wav"
-        audio_path = temp_audio_dir / audio_filename
+        audio_path = wavs_dir / audio_filename
         save_audio_from_dict(audio_dict, str(audio_path))
 
         # Get duration
@@ -85,7 +94,7 @@ def prepare_hf_dataset(
 
         vocab_set.update(list(processed_text))
 
-    return processed_data, durations, vocab_set, temp_audio_dir
+    return processed_data, durations, vocab_set, wavs_dir
 
 
 def save_prepped_dataset(
@@ -144,13 +153,12 @@ def prepare_and_save_hf_dataset(
         assert (
             PRETRAINED_VOCAB_PATH.exists()
         ), f"pretrained vocab.txt not found: {PRETRAINED_VOCAB_PATH}"
-    sub_result, durations, vocab_set, temp_audio_dir = prepare_hf_dataset(
-        dataset_name, split, text_column, phone_column, audio_column, lang
+    sub_result, durations, vocab_set, wavs_dir = prepare_hf_dataset(
+        dataset_name, split, text_column, phone_column, audio_column, lang, out_dir
     )
     save_prepped_dataset(out_dir, sub_result, durations, vocab_set, is_finetune, lang)
 
-    # Clean up temp audio dir
-    shutil.rmtree(temp_audio_dir)
+    # No cleanup needed - audio files are saved in the output directory
 
 
 def cli():
