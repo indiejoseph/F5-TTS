@@ -6,15 +6,17 @@ import signal
 import subprocess  # For invoking ffprobe
 import sys
 from contextlib import contextmanager
+from pathlib import Path
 
-
-sys.path.append(os.getcwd())
+# Add the project root to Python path to ensure local imports work
+project_root = Path(__file__).parents[4]
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
 
 import argparse
 import csv
 import json
 from importlib.resources import files
-from pathlib import Path
 
 import torchaudio
 from datasets.arrow_writer import ArrowWriter
